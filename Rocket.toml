@@ -1,0 +1,5 @@
+[global]
+template_dir = "pages"
+limits = {file="5000 Mib", data-form="5000 Mib"}
+log_level = "normal"
+address = "0.0.0.0"

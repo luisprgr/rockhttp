@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/bootstrap.bundle.min.js"></script>
+    <link href="/assets/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="/assets/favicon.png">
+    <title>File Server</title>
+</head>
+<body>
+    <div class="container">
+       
+        <div class="mt-5 mb-5">
+                <h2 class="text-center">File Server</h2>
+        </div>
+
+        <div class="row mt-5">
+            <div class="mx-auto center-block">
+            <form action="" class="mx-auto" style="width: 90%;">
+                <div class="input-group">
+                    <input class="form-control" style="width: 70%;" type="file" name="file_e" id="file">
+                    <input class="form-control btn-outline-primary" type="button" onclick="upload_file_e();" value="Upload">
+                </div>
+            </form>
+            </div>
+        </div>
+
+        <div class="row mt-3 ">
+            
+            <table class="table table-hover table-bordered mx-auto" style="width: 90%;">
+                <thead class="table-light">
+                    <th class="text-center" style="width: 40px;">#</th>
+                    <th>Name</th>
+                    <th class="text-center" style="width: 100px;">Size</th>
+                    <th class="text-center" style="width: 250px;" >Action</th>
+                    <th class="text-center" style="width: 30px;">Check</th>
+                </thead>
+                <tbody>
+                    {% set n = 1 %}
+                    {% for file in files %}
+                        <tr>
+                            <td class="text-center">{{n}}</td>
+                            <td class="text-break">{{file.name}}</td>
+                            <td class="text-center" >{{file.size}}</td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <a class="btn btn-outline-success download_button" style="width: 100px;" href="/files/{{file.name}}" download>Download</a> 
+                                    <div style="width: 5px;"></div>
+                                    <a class="btn btn-outline-danger" style="width: 100px;" onclick="delete_file_2('{{file.name}}');">Delete</a>
+                                </div>
+                            </td>
+                            <td>
+                                <form action="" class="m-0 p-0" style="width: 100%;">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                    <input class="form-check-input" style="width: 27px; height:27px;"  type="checkbox" name="" id="" aria-label="...">
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% set_global n = n +1 %}
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <td></td>
+                    <td class="" >Total Size: </td>
+                    <td class="text-center"> {{sum_string}}</td>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-outline-secondary" style="width: 150px;" onclick="download_all()">Download all</a>
+                        </div>
+                    </td>
+                    <td></td>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="row">
+            <br>
+            {% if error != "" %}
+                <p> Error: <br> {{error}} </p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+
+        function delete_file(name) {
+            var x = new XMLHttpRequest(); 
+            x.open("GET","/delete/" + name); 
+            x.send(); 
+            window.location.reload(true);
+        }
+
+        function delete_file_2(name) { 
+            fetch("/delete/" + name); 
+            window.location.reload(true);
+        }
+
+        function upload_file_e() { 
+            var file_u = document.getElementById("file").files[0];
+            var formd = new FormData();
+            formd.append("file", file_u);
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function() {
+                if (this.status == 200) {
+                    window.location.reload(true);
+                }
+            }
+            req.open("POST", "/upload");
+            req.send(formd);
+        }
+
+        function sleep(seconds) {
+            return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+        }
+
+        async function download_all() {
+            let links = document.getElementsByClassName("download_button");
+            for (var link of links) {
+                console.log(link);
+                link.click();
+                await sleep(3);
+            }
+        }
+
+    </script>
+
+</body>
+</html>
