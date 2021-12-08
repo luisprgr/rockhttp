@@ -5,6 +5,7 @@ use rocket::fs::{NamedFile, TempFile};
 use rocket::serde::Serialize;
 use rocket_dyn_templates::Template;
 
+/// Struct to save file attributes to render in the index page 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 struct FileDescription {
@@ -13,6 +14,7 @@ struct FileDescription {
     size: String,
 }
 
+/// Struct to save all the content that will show the index page
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 struct FileServerContext {
@@ -22,6 +24,13 @@ struct FileServerContext {
     error: String,
 }
 
+/// Struct to handle the uploaded files 
+#[derive(FromForm)]
+pub struct UploadS<'t> {
+    file: TempFile<'t>,
+}
+
+/// Get controller of the index page 
 #[get("/")]
 pub async fn index() -> Template {
     let directory = Path::new("files");
@@ -31,7 +40,7 @@ pub async fn index() -> Template {
         sum_string: String::new(),
         error: String::from(""),
     };
-
+    // Reads the metadata of each file in the "files" directory, saves the metadata in the "FileDescription" struct, and saves all structures in the vector of the "FileServerContext" structure 
     match directory.read_dir() {
         Ok(dir_iter) => {
             for file in dir_iter {
@@ -90,6 +99,7 @@ pub async fn index() -> Template {
     Template::render("index", context)
 }
 
+/// Get controller for the files download function 
 #[get("/files/<file_name..>")]
 pub async fn files_controller(file_name: PathBuf) -> Option<NamedFile> {
     let directory = Path::new("files").join(file_name);
@@ -100,6 +110,7 @@ pub async fn files_controller(file_name: PathBuf) -> Option<NamedFile> {
     }
 }
 
+/// Get controller for the assets
 #[get("/assets/<file_name..>")]
 pub async fn assets(file_name: PathBuf) -> Option<NamedFile> {
     let directory = Path::new("assets").join(file_name);
@@ -110,6 +121,7 @@ pub async fn assets(file_name: PathBuf) -> Option<NamedFile> {
     }
 }
 
+///get controller for the delete files function
 #[get("/delete/<file_name..>")]
 pub async fn delete_files_controller(file_name: PathBuf) {
     let directory = Path::new("files").join(file_name);
@@ -119,24 +131,20 @@ pub async fn delete_files_controller(file_name: PathBuf) {
     }
 }
 
-#[derive(FromForm)]
-pub struct UploadS<'t> {
-    file: TempFile<'t>,
-}
-
+//post controller for the upload files function 
 #[post("/upload", data = "<form_file>")]
 pub async fn upload_file(mut form_file: Form<UploadS<'_>>) {
     if form_file.file.len() > 0 {
         match form_file.file.raw_name() {
             Some(name) => {
                 let mut name_secure = String::from(name.as_str().unwrap());
-                //checking the insecure raw file name
+                // checking the insecure raw file name to get the extension 
                 if name
                     .dangerous_unsafe_unsanitized_raw()
                     .as_str()
                     .contains(".mkv")
                 {
-                    //the file name using the secure file name plus the extension
+                    // creating the file name to be saved, using the secure file name plus the extension
                     name_secure = name_secure + ".mkv";
                 } else if name
                     .dangerous_unsafe_unsanitized_raw()
