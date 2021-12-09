@@ -1,4 +1,4 @@
-use std::fs::remove_file;
+use std::fs::{remove_file, create_dir_all};
 use std::path::{Path, PathBuf};
 use rocket::form::Form;
 use rocket::fs::{NamedFile, TempFile};
@@ -33,67 +33,77 @@ pub struct UploadS<'t> {
 /// Get controller of the index page 
 #[get("/")]
 pub async fn index() -> Template {
-    let directory = Path::new("files");
     let mut context = FileServerContext {
         files: Vec::new(),
         sum: 0.,
         sum_string: String::new(),
         error: String::from(""),
     };
-    // Reads the metadata of each file in the "files" directory, saves the metadata in the "FileDescription" struct, and saves all structures in the vector of the "FileServerContext" structure 
-    match directory.read_dir() {
-        Ok(dir_iter) => {
-            for file in dir_iter {
-                match file {
-                    Ok(file) => match file.metadata() {
-                        Ok(metadata) => {
-                            if metadata.is_file() {
-                                let name_temp = file.file_name().to_string_lossy().into_owned();
-                                let date_temp = match metadata.modified() {
-                                    Ok(date) => format!("{:?}", date),
-                                    Err(_) => String::from("no date found"),
-                                };
-                                context.sum += metadata.len() as f64;
-                                let mut size_processed = (metadata.len() as f64) / 1024.;
-                                let mut size_sub = String::from("Kb");
-                                if size_processed > 1000. {
-                                    size_processed = size_processed / 1024.;
-                                    size_sub = String::from("Mb");
+
+    //creates the "files" directory if it does not exist
+    match create_dir_all("files"){
+        Ok(_) => {
+            let directory = Path::new("files");
+            /* Reads the metadata of each file in the "files" directory, saves the metadata in the "FileDescription" struct,
+               and saves all structures in the vector of the "FileServerContext" structure */
+            match directory.read_dir() {
+                Ok(dir_iter) => {
+                    for file in dir_iter {
+                        match file {
+                            Ok(file) => match file.metadata() {
+                                Ok(metadata) => {
+                                    if metadata.is_file() {
+                                        let name_temp = file.file_name().to_string_lossy().into_owned();
+                                        let date_temp = match metadata.modified() {
+                                            Ok(date) => format!("{:?}", date),
+                                            Err(_) => String::from("no date found"),
+                                        };
+                                        context.sum += metadata.len() as f64;
+                                        let mut size_processed = (metadata.len() as f64) / 1024.;
+                                        let mut size_sub = String::from("Kb");
+                                        if size_processed > 1000. {
+                                            size_processed = size_processed / 1024.;
+                                            size_sub = String::from("Mb");
+                                        }
+                                        if size_processed > 1000. {
+                                            size_processed = size_processed / 1024.;
+                                            size_sub = String::from("Gb");
+                                        }
+                                        let size_temp = format!("{:.2} {}", size_processed, size_sub);
+                                        context.files.push(FileDescription {
+                                            name: name_temp,
+                                            date: date_temp,
+                                            size: size_temp,
+                                        });
+                                    }
                                 }
-                                if size_processed > 1000. {
-                                    size_processed = size_processed / 1024.;
-                                    size_sub = String::from("Gb");
-                                }
-                                let size_temp = format!("{:.2} {}", size_processed, size_sub);
-                                context.files.push(FileDescription {
-                                    name: name_temp,
-                                    date: date_temp,
-                                    size: size_temp,
-                                });
-                            }
+                                Err(e) => context.error = e.to_string(),
+                            },
+                            Err(e) => context.error = e.to_string(),
                         }
-                        Err(e) => context.error = e.to_string(),
-                    },
-                    Err(e) => context.error = e.to_string(),
+                    }
                 }
+                Err(e) => {
+                    context.error = e.to_string();
+                }
+            }
+            if context.sum > 0. {
+                let mut size_processed = context.sum / 1024.;
+                let mut size_sub = String::from("Kb");
+                if size_processed > 1000. {
+                    size_processed = size_processed / 1024.;
+                    size_sub = String::from("Mb");
+                }
+                if size_processed > 1000. {
+                    size_processed = size_processed / 1024.;
+                    size_sub = String::from("Gb");
+                }
+                context.sum_string = format!("{:.2} {}", size_processed, size_sub);
             }
         }
         Err(e) => {
             context.error = e.to_string();
         }
-    }
-    if context.sum > 0. {
-        let mut size_processed = context.sum / 1024.;
-        let mut size_sub = String::from("Kb");
-        if size_processed > 1000. {
-            size_processed = size_processed / 1024.;
-            size_sub = String::from("Mb");
-        }
-        if size_processed > 1000. {
-            size_processed = size_processed / 1024.;
-            size_sub = String::from("Gb");
-        }
-        context.sum_string = format!("{:.2} {}", size_processed, size_sub);
     }
 
     Template::render("index", context)
