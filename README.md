@@ -1,18 +1,12 @@
 # Rockhttp
 > A http file server made in the Rust web framework Rocket with the template engine Tera
 
-## Build
-
-1. Install the Rust toolchain 
-2. build with ``cargo build --release``
-3. Run the application with ``cargo run --release`` or with ``./rockhttp`` in the *target/release* folder 
+**[⚠] This is a experimental branch created to try to reduce the size of the docker container to the minimum possible, using rust nightly, a musl compiler and busybox as the base image [⚠]**
 
 ## Installation with docker 
 
-You can use the Dockerized version with:
-
 ```shell
-Docker run -P 8000:8000 luisprgr/rockhttp:latest
+Docker run -P 8000:8000 luisprgr/rockhttp:alpha-musl-busybox
 ```
 
 Or creating a docker-compose.yml like the following example:
@@ -21,7 +15,7 @@ Or creating a docker-compose.yml like the following example:
 version: "3.3"
 services:
   rockhttp:
-    image: luisprgr/rockhttp
+    image: luisprgr/rockhttp:alpha-musl-busybox
     container_name: rockhttp
     ports:
       - 8000:8000
