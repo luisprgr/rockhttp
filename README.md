@@ -26,3 +26,7 @@ services:
     ports:
       - 8000:8000
 ```
+
+## License
+
+Licensed under the [MIT License](LICENSE) 
