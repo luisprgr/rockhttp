@@ -9,7 +9,7 @@
 
 ## Installation with docker 
 
-You can use the Dockerized version with:
+You can use the [Dockerized](https://hub.docker.com/r/luisprgr/rockhttp) version with:
 
 ```shell
 Docker run -P 8000:8000 luisprgr/rockhttp:latest
@@ -29,4 +29,4 @@ services:
 
 ## License
 
-Licensed under the [MIT License](LICENSE) 
+This project is licensed under the following licenses [MIT](LICENSE-MIT) and [Apache-2.0](LICENSE-APACHE) you can choose the one you prefer.
